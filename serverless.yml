@@ -1,0 +1,38 @@
+service: ses-forwarder
+
+package:
+  exclude:
+    - './**'
+  include:
+    - './handler.py'
+    - './mapping.json'
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment: ${file(env.yml)}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+      Resource: "arn:aws:logs:*:*:*"
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+        - "s3:PutObject"
+      Resource: "arn:aws:s3:::${self:provider.environment.SES_INCOMING_BUCKET}/*"
+    - Effect: "Allow"
+      Action:
+        - "ses:SendRawEmail"
+      Resource: "*"
+
+functions:
+  SesForwarder:
+    handler: handler.handler
+    memorySize: 512
+    timeout: 28

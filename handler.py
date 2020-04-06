@@ -1,15 +1,3 @@
-"""
-This code is a Python 3.6 port of [aws-lambda-ses-forwarder](https://github.com/arithmetric/aws-lambda-ses-forwarder). Follow instructions there for setting up SES and AWS Lambda. It was ported to py2.7 by [skylander86](https://gist.github.com/skylander86/d75bf010c7685bd3f951d2b6c5a32e7b), and then I added the following:
-
-- py3 compatability, obviously.
-- MSG_TARGET and MSG_TO_LIST: move the distribution list out of code.
-- SUBJECT_PREFIX: add something like `[listname]` to the subject line.
-- S3_PREFIX: an optional prefix for the key used to fetch a mail message. Useful if you put your incoming mail in an s3 'directory'.
-- Commented out 'from rewriting', instead using 'reply-to' to redirect replies back to the list.
-
-The original was MIT licensed; skylander86's gist doesn't have a license, so it is presumed to still be MIT. This version is copyright 2018 tedder, MIT license.
-"""
-
 import email
 import json
 import logging
@@ -19,22 +7,23 @@ import re
 import boto3
 from botocore.exceptions import ClientError
 
-FORWARD_MAPPING = {
-    os.environ.get('MSG_TARGET'): os.environ.get('MSG_TO_LIST'),
-}
+#  FORWARD_MAPPING = {recipient: os.environ.get('MSG_TO_LIST') for recipient in os.environ.get('MSG_TARGET')}
 
-VERIFIED_FROM_EMAIL = os.environ.get('VERIFIED_FROM_EMAIL', 'noreply@example.com')  # An email that is verified by SES to use as From address.
+with open('mapping.json', 'r') as f:
+    FORWARD_MAPPING = json.load(f)
+VERIFIED_FROM_EMAIL = os.environ.get('VERIFIED_FROM_EMAIL', 'tau@megali.co.uk')  # An email that is verified by SES to use as From address.
 SUBJECT_PREFIX = os.environ.get('SUBJECT_PREFIX') # label to add to a list, like `[listname]`
 SES_INCOMING_BUCKET = os.environ['SES_INCOMING_BUCKET']  # S3 bucket where SES stores incoming emails.
 S3_PREFIX = os.environ.get('S3_PREFIX', '') # optional, if messages aren't stored in root
+
 s3 = boto3.client('s3')
 ses = boto3.client('ses')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
-def lambda_handler(event, context):
+def handler(event, context):
     record = event['Records'][0]
     assert record['eventSource'] == 'aws:ses'
 
