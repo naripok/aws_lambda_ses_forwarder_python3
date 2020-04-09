@@ -1,4 +1,4 @@
-AWS Lambda SES Email Forwarder
+# AWS Lambda SES Email Forwarder
 
 A python script for AWS Lambda that uses the inbound/outbound capabilities of AWS Simple Email Service (SES) to run a "serverless" email forwarding service.
 
@@ -23,7 +23,7 @@ Limitations
 
     Initially SES users are in a sandbox environment that has a number of limitations. See: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/limits.html
 
-Set Up
+## Set Up
 
     Modify the values in the config object at the top of index.js to specify the S3 bucket and object prefix for locating emails stored by SES. Also provide the email forwarding mapping from original destinations to new destination.
 
@@ -113,7 +113,7 @@ Set Up
 
     Optionally set the S3 lifecycle for this bucket to delete/expire objects after a few days to clean up the saved emails.
 
-Extending
+## Extending
 
 By loading aws-lambda-ses-forwarder as a module in a Lambda script, you can override the default config settings, change the order in which to process tasks, and add functions as custom tasks.
 
@@ -134,6 +134,7 @@ Test the configuration by sending emails to recipient addresses.
 
     If your Lambda function encounters an error it will be logged in CloudWatch. Click on "Logs" in the CloudWatch menu, and you should find a log group for the Lambda function.
 
-Credits
+### Credits
 
-Based on the work of @eleven41 and @mwhouser from: https://github.com/eleven41/aws-lambda-send-ses-email
+https://github.com/tedder/aws_lambda_ses_forwarder_python3
+https://github.com/arithmetric/aws-lambda-ses-forwarder
