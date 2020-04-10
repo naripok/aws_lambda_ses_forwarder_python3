@@ -48,12 +48,9 @@ def handler(event, context):
     msg['Reply-To'] = VERIFIED_FROM_EMAIL
     msg['Return-Path'] = VERIFIED_FROM_EMAIL
 
-    logger.info("subject prefix: {}".format(SUBJECT_PREFIX))
-    if SUBJECT_PREFIX and SUBJECT_PREFIX.lower() not in msg.get('Subject').lower():
-        new_subj = ' '.join([SUBJECT_PREFIX, f', from: {original_from}:', msg.get('Subject', '')])
-        del msg['Subject']
-        msg['Subject'] = new_subj
-        logger.info("new subj: {}".format(msg['Subject']))
+    new_subj = ' '.join([f'{original_from}: ', msg.get('Subject', '')])
+    del msg['Subject']
+    msg['Subject'] = new_subj
 
     msg_string = msg.as_string()
 
