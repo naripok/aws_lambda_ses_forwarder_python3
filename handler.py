@@ -64,10 +64,6 @@ def handler(event, context):
     msg['Return-Path'] = VERIFIED_FROM_EMAIL
     msg['From'] = from_name + ' <{}>'.format(VERIFIED_FROM_EMAIL)
 
-    print(original_from)
-    print(from_name)
-    print(from_email)
-
     new_subj = ' '.join([f'{original_from}: ', msg.get('Subject', '')])
     del msg['Subject']
     msg['Subject'] = new_subj
