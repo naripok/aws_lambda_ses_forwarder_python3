@@ -43,9 +43,10 @@ def handler(event, context):
     logger.info("from: {}".format(msg['From']))
     original_from = msg['From']
     del msg['From']
-    msg['From'] = re.sub(r'\<.+?\>', '', original_from).strip() + ' <{}>'.format(VERIFIED_FROM_EMAIL)
+    striped_from = re.sub(r'\<.+?\>', '', original_from).strip()
+    msg['From'] = striped_from + ' <{}>'.format(VERIFIED_FROM_EMAIL)
 
-    msg['Reply-To'] = VERIFIED_FROM_EMAIL
+    msg['Reply-To'] = striped_from
     msg['Return-Path'] = VERIFIED_FROM_EMAIL
 
     new_subj = ' '.join([f'{original_from}: ', msg.get('Subject', '')])
