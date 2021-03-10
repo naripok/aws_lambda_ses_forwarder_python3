@@ -30,24 +30,43 @@ def handler(event, context):
     o = s3.get_object(Bucket=SES_INCOMING_BUCKET, Key=S3_PREFIX+record['ses']['mail']['messageId'])
     raw_mail = o['Body'].read()
     logger.info("body: {}".format(type(raw_mail)))
-    #msg = raw_mail
+
     msg = email.message_from_bytes(raw_mail)
     logger.info("m: {}".format(msg))
+
+    logger.info("keys: {}".format(msg.keys()))
+    logger.info("from: {}".format(msg['From']))
+
+    original_from = msg['From']
 
     del msg['DKIM-Signature']
     del msg['Sender']
     del msg['Return-Path']
     del msg['Reply-To']
-
-    logger.info("keys: {}".format(msg.keys()))
-    logger.info("from: {}".format(msg['From']))
-    original_from = msg['From']
     del msg['From']
-    striped_from = re.sub(r'\<.+?\>', '', original_from).strip()
-    msg['From'] = striped_from + ' <{}>'.format(VERIFIED_FROM_EMAIL)
 
-    msg['Reply-To'] = striped_from
+    try:
+        from_email = re.search(r'\<(.*)\>', original_from).group(1)
+    except:
+        from_email = None
+
+    from_name = re.sub(r'\<.+?\>', '', original_from).strip()
+
+    if from_email != None:
+        msg['Reply-To'] = from_email.strip()
+
+    elif re.match(r'.+@.+\..{1,6}', from_name):
+        msg['Reply-To'] = from_name
+
+    else:
+        msg['Reply-To'] = VERIFIED_FROM_EMAIL
+
     msg['Return-Path'] = VERIFIED_FROM_EMAIL
+    msg['From'] = from_name + ' <{}>'.format(VERIFIED_FROM_EMAIL)
+
+    print(original_from)
+    print(from_name)
+    print(from_email)
 
     new_subj = ' '.join([f'{original_from}: ', msg.get('Subject', '')])
     del msg['Subject']
@@ -67,7 +86,7 @@ def handler(event, context):
 
             try:
                 o = ses.send_raw_email(Destinations=[address], RawMessage=dict(Data=msg_string))
-                logger.info('Forwarded email for <{}> to <{}>. SendRawEmail response={}'.format(recipient, address, json.dumps(o)))
+                logger.info('Forwarded email from <{}> to <{}>. SendRawEmail response={}'.format(recipient, address, json.dumps(o)))
             except ClientError as e:
                 logger.error('Client error while forwarding email for <{}> to <{}>: {}'.format(recipient, address, e))
 
